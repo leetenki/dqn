@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>DQN Input</title>
+  <link rel="stylesheet" href="./static/css/bootstrap.min.css">
+  <script type="text/javascript" src="./static/js/jquery.min.js"></script>
+  <script type="text/javascript" src="./static/js/bootstrap.min.js"></script>
+  <style type="text/css">
+    * {
+      user-select: none;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+    td, th {
+      padding: 10px;
+      border: #aaaaaa solid 3px;
+    }
+  </style>
+</head>
+
+
+<body>
+  <h2 style="text-align: center; margin-top: 40px; margin-bottom: 50px;"><span style=" background-color: #aaaaaa; color: white; font-size: 1.3em; border: 2px #666666 solid; border-radius: 30px; padding: 20px;">Deep Q-Network Input</span></h2>
+
+  <!-- controller -->
+  <div class="container">
+    <div class="col col-md-8 col-md-offset-2" style="margin-top: 20px; border: 4px dashed gray; padding: 20px; border-radius: 30px;">
+      <div><b style="font-size: 1.5em; color: #999999;">Usage：⇦ ⇨ ⇧ ⇩ to move, [Shift] to switch mode.</b></div>
+    </div>
+  </div>
+
+  <!-- view panel -->
+  <div class="container" style="margin-bottom: 20px;">
+    <div style="width: 50%; float: left; text-align:center; padding-top: 20px;">
+      <div style="width: 100%; font-size:2em;">
+        <div class="col-md-2 col-md-offset-4"><b>S</b><span style="font-size: 0.5em;">(t)</span></div>
+        <div class="col-md-2"><span id="s_prev_text" style="font-size: 0.6em;">Color</span></div>
+      </div>
+      <canvas id="s_prev" style="cursor: pointer;"></canvas>
+    </div>
+
+    <div style="width: 50%; float: right; text-align:center; padding-top: 20px;">
+      <div style="width: 100%; font-size:2em;">
+        <div class="col-md-2 col-md-offset-4"><b>S</b><span style="font-size: 0.5em;">(t+1)</span></div>
+        <div class="col-md-2"><span id="s_next_text" style="font-size: 0.6em;">Color</span></div>
+      </div>
+      <canvas id="s_next" style="cursor: pointer;"></canvas>
+    </div>
+
+    <div style="width: 100%" id="distance">
+    </div>
+  </div>
+
+  <table class="container">
+    <tr>
+      <th class="col-md-2">Mode</th>
+      <th class="col-md-2">Epsilon</th>
+      <th class="col-md-2">Alpha</th>
+      <th class="col-md-2">Gamma</th>
+      <th class="col-md-2">Action</th>
+      <th class="col-md-2">Reward</th>
+    </tr>
+    <tr>
+      <td class="col-md-2">
+        <span id="mode" style="color: white; margin-bottom:5px;" class="btn btn-xs btn-success col-md-12">MANUAL</span>
+        <!--<span id="save" style="color: white;" class="btn btn-xs btn-warning col-md-12">SAVE</span>-->
+      </td>
+      <td class="col-md-2"><input type="text" class="form-control" id="epsilon" value="1.0" /></td>
+      <td class="col-md-2"><input type="text" class="form-control" id="alpha" value="0.001" /></td>
+      <td class="col-md-2"><input type="text" class="form-control" id="gamma" value="0.7"/></td>
+      <td class="col-md-2"><span id="action" style="color: orange;"></span></td>
+      <td class="col-md-2"><span id="reward" style="color: orange;"></span></td>
+    </tr>
+  </table>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script type="text/javascript">
+    var COMMAND = {
+      FORWARD: {
+        action: 0,
+        text: "⇧ FORWARD"
+      },
+      BACK: {
+        action: 1,
+        text: "⇩ BACK"
+      },
+      TURN_LEFT: {
+        action: 2,
+        text: "⇦ LEFT"
+      },
+      TURN_RIGHT: {
+        action: 3,
+        text: "⇨ RIGHT"
+      },
+      LENGTH: 4
+    };
+
+    var LOCATION = "localhost:8666";
+
+    var canvasWidth = 128;
+    var canvasHeight = 96;
+    var ratio = 2.5;
+    var mode = "Manual";
+    var prevPixelMode = "Color";
+    var nextPixelMode = "Color";
+    var remoteMode = "TEXTURE"; // TEXTURE or DISTANCE
+
+    // canvas
+    var canvas = document.getElementById("s_prev");
+    canvas.setAttribute("width", canvasWidth * ratio);
+    canvas.setAttribute("height", canvasHeight * ratio);
+    var context_prev = canvas.getContext("2d")
+    context_prev.scale(1, -1);
+
+    canvas = document.getElementById("s_next");
+    canvas.setAttribute("width", canvasWidth * ratio);
+    canvas.setAttribute("height", canvasHeight * ratio);
+    var context_next = canvas.getContext("2d") 
+    context_next.scale(1, -1);
+
+
+    var imgdata = context_next.createImageData(canvasWidth, canvasHeight);
+
+    // temp canvas
+    var tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvasWidth;
+    tempCanvas.height = canvasHeight;
+    var tempContext = tempCanvas.getContext("2d");
+
+    // pixels
+    var tempPixels = new Uint8Array(canvasWidth * canvasHeight * 4);
+
+    $(function() {
+      // view web socket
+      var viewWebsocket;
+      viewWebsocket = new WebSocket("ws://" + LOCATION + "/view_websocket");
+      function viewTexture(e) {
+        // prev state
+        var pixels = new Uint8Array(e.data);
+        switch(prevPixelMode) {
+          case "Color": {
+            for(var i = 0; i < imgdata.data.length; i++) {
+              imgdata.data[i] = pixels[i];
+            }
+            break;            
+          }
+          case "GrayScale": {
+            toGrayScale(canvasWidth, canvasHeight, pixels, imgdata.data, 0);
+            break;
+          }
+          case "Edge": {
+            toGrayScale(canvasWidth, canvasHeight, pixels, tempPixels, 0);
+            detectEdge(canvasWidth, canvasHeight, tempPixels, imgdata.data);
+            break;
+          }
+        }
+
+        tempContext.putImageData(imgdata, 0, 0);
+        context_prev.drawImage(tempCanvas, 0, 0, canvasWidth * ratio, -canvasHeight * ratio);
+
+        // next state
+        switch(nextPixelMode) {
+          case "Color": {
+            for(var i = 0; i < imgdata.data.length; i++) {
+              imgdata.data[i] = pixels[i+imgdata.data.length];
+            }
+            break;
+          }
+          case "GrayScale": {
+            toGrayScale(canvasWidth, canvasHeight, pixels, imgdata.data, imgdata.data.length);        
+            break;
+          }
+          case "Edge": {
+            toGrayScale(canvasWidth, canvasHeight, pixels, tempPixels, imgdata.data.length);        
+            detectEdge(canvasWidth, canvasHeight, tempPixels, imgdata.data);
+            break;
+          }
+        }
+
+
+        tempContext.putImageData(imgdata, 0, 0);
+        context_next.drawImage(tempCanvas, 0, 0, canvasWidth * ratio, -canvasHeight * ratio);
+
+        // action
+        $("#action").text(pixels[imgdata.data.length * 2])
+
+        // reward
+        $("#reward").text(pixels[imgdata.data.length * 2 + 1])
+      }
+
+      // function to process distance
+      function viewDistance(e) {
+        var distanceInfo = JSON.parse(e.data);
+
+        //$("#distance").text(distanceInfo.distance)
+
+        // action
+        $("#action").text(distanceInfo.action)
+
+        // reward
+        $("#reward").text(Math.round(distanceInfo.rewards * 100) / 100)
+      }
+
+      if(remoteMode == "TEXTURE") {
+        viewWebsocket.binaryType = "arraybuffer";
+        viewWebsocket.onmessage = viewTexture
+      } else {
+        viewWebsocket.onmessage = viewDistance
+      }
+
+
+      // setting web socket
+      var settingWebsocket;
+      settingWebsocket = new WebSocket("ws://" + LOCATION + "/setting_websocket");
+
+      function updateSetting() {
+        var parameters = {
+          epsilon: $("#epsilon")[0].value,
+          alpha: $("#alpha")[0].value,
+          gamma: $("#gamma")[0].value,
+        };
+        settingWebsocket.send(JSON.stringify(parameters));
+      }
+      $("#epsilon").change(updateSetting)
+      $("#alpha").change(updateSetting)
+      $("#gamma").change(updateSetting)
+
+      // command web socket
+      var commandWebsocket;
+      commandWebsocket = new WebSocket("ws://" + LOCATION + "/command_websocket");
+      function switchMode() {
+        commandWebsocket.send("switch");
+      }
+      $("#mode").click(switchMode);
+      commandWebsocket.onmessage = function(e) {
+        $("#mode").text(e.data);
+      }
+
+      // key event
+      document.onkeydown = function(e) { 
+        switch(e.keyIdentifier) {
+          case "Down":
+            viewWebsocket.send(COMMAND.BACK.action)
+            break;
+          case "Up":
+            viewWebsocket.send(COMMAND.FORWARD.action)
+            break;
+          case "Left":
+            viewWebsocket.send(COMMAND.TURN_LEFT.action)
+            break;
+          case "Right":
+            viewWebsocket.send(COMMAND.TURN_RIGHT.action)
+            break;
+          case "Shift":
+            switchMode();
+            break;
+        }
+      }
+
+      // click event function of s_prev and s_next
+      $("#s_prev").click(function() {
+        switch(prevPixelMode) {
+          case "Color": {
+            prevPixelMode = "GrayScale";
+            break;
+          }
+          case "GrayScale": {
+            prevPixelMode = "Edge";
+            break;
+          }
+          case "Edge": {
+            prevPixelMode = "Color";
+            break;
+          }
+        }
+        $("#s_prev_text").text(prevPixelMode);
+      });
+      $("#s_next").click(function() {
+        switch(nextPixelMode) {
+          case "Color": {
+            nextPixelMode = "GrayScale";
+            break;
+          }
+          case "GrayScale": {
+            nextPixelMode = "Edge";
+            break;
+          }
+          case "Edge": {
+            nextPixelMode = "Color";
+            break;
+          }
+        }
+        $("#s_next_text").text(nextPixelMode);
+      });
+
+      // detect edge of texture
+      function detectEdge(width, height, inputData, outputData) {
+        var w = width;
+        var h = height;
+        for (var y = 1; y < h-1; y += 1) {
+          for (var x = 1; x < w-1; x += 1) {
+            for (var c = 0; c < 3; c += 1) {
+             var i = (y*w + x)*4 + c;
+             outputData[i] = 127 + -inputData[i - w*4 - 4] -   inputData[i - w*4] - inputData[i - w*4 + 4] +
+                                   -inputData[i - 4]       + 8*inputData[i]       - inputData[i + 4] +
+                                   -inputData[i + w*4 - 4] -   inputData[i + w*4] - inputData[i + w*4 + 4];
+            }
+            outputData[(y*w + x)*4 + 3] = 255; // alpha
+          }
+        }        
+      }
+
+      // convert image to grayscale
+      function toGrayScale(width, height, inputData, outputData, offset) {
+        var length = width * height * 4;
+        for(var i = 0; i < length; i += 4) {
+          var grayscale = inputData[offset + i] * 0.3 + inputData[offset + i + 1] * 0.59 + inputData[offset + i + 2] * 0.11;
+
+          outputData[i] = grayscale;
+          outputData[i+1] = grayscale;
+          outputData[i+2] = grayscale;
+          outputData[i+3] = inputData[offset + i + 3];
+        }
+      }
+
+    });
+
+  </script>
+</body>
+</html>

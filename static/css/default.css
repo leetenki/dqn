@@ -1,0 +1,268 @@
+* {
+	padding: 0;
+	margin: 0;
+}
+
+body {
+	margin: 0px;
+	background-color: #000000;
+	overflow: hidden;
+}
+
+/*************************** /
+//    navication box
+*****************************/
+#info {
+	width: 170px;
+	height: 68%;
+	position: absolute;
+	-moz-user-select: none;	
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+	cursor: default;
+	margin-left: 10px;
+	margin-top: 10px;
+	padding: 10px;
+	/*
+	box-shadow: 0px 0px 20px rgba(255,255,0,0.5);
+	border: 1px solid rgba(255,255,127,0.25);
+	background-color: rgba(127, 127, 0, 0.4);
+	*/
+	box-shadow: 0px 0px 12px rgba(0,255,255,0.75);
+	border: 1px solid rgba(127,255,255,0.75);
+	background-color: rgba(0, 127, 127, 0.25);
+}
+
+#status {
+	width: 170px;
+	height: 200px;
+	position: absolute;
+	left: 200px;
+	-moz-user-select: none;	
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+	box-shadow: 0px 0px 12px rgba(0,255,255,0.75);
+	border: 1px solid rgba(127,255,255,0.75);
+	background-color: rgba(0, 127, 127, 0.25);
+	cursor: default;
+	margin-left: 10px;
+	margin-top: 10px;
+	padding: 10px;
+}
+
+p {
+	position: relative;
+	top: 0px;
+	right: 0px;
+	font-size: 11px;
+	padding: 1px;
+	text-align: left;
+	padding-right: 4px;
+	opacity: 1;
+	font-weight: bold;
+	color: rgba(255,255,255,1);
+	text-shadow: 0 0 10px rgba(0,255,255,1);	
+}
+
+span {
+	display: inline-block;
+	width: 80px;
+}
+.danger {
+	color: rgba(255,0,0,1);
+	text-shadow: 0 0 8px rgba(200,0,200,1);	
+}
+/*
+.victim {
+	color: rgba(204, 0, 153, 1);
+	text-shadow: 0 0 8px rgba(204, 30, 153, 1);
+}
+*/
+.safe {
+	color: rgba(0,255,0,1);
+	text-shadow: 0 0 8px rgba(200,200,200,1);	
+}
+.active {
+	color: rgba(255,100,0,1);
+	text-shadow: 0 0 8px rgba(255,100,100,1);
+}
+.inactive {
+	color: rgba(100,200,255,1);
+	text-shadow: 0 0 8px rgba(200,200,255,1);	
+}
+.score {
+}
+.name {
+	width: 60px;
+}
+.usage {
+	color: rgba(100,200,255,1);
+	text-shadow: 0 0 8px rgba(200,200,255,1);	
+	width: 100px;
+}
+.usage:hover {
+	cursor: pointer;
+	color: rgba(200, 255, 255, 1);
+}
+.prebuilt {	
+	color: rgba(200,200,0,0.8);
+	text-shadow: 0 0 8px rgba(200,200,200,1);	
+	width: 100px;
+}
+.prebuilt:hover {
+	color: rgba(255,255,0,0.7);
+	text-shadow: 0 0 8px rgba(244,200,200,1);	
+	width: 100px;
+	cursor: pointer;
+}
+hr {
+	width: 100%;
+	border-color: rgba(100, 200, 255, 0.6);
+	margin: 7px 0;
+}
+img#selectCursor {
+	width: 30px;
+	mix-blend-mode: lighten;
+	position: absolute;
+	top: -4px;
+	right: 10px;
+}
+img#deleteCursor {
+	width: 30px;
+	mix-blend-mode: lighten;
+	position: absolute;
+	top: -4px;
+	right: 10px;
+}
+img#addCarCursor {
+	width: 30px;
+	mix-blend-mode: lighten;
+	position: absolute;
+	top: -4px;
+	right: 10px;
+}
+img#loadCarCursor {
+	width: 30px;
+	mix-blend-mode: lighten;
+	position: absolute;
+	top: -4px;
+	right: 10px;
+}
+img#addObstacleCursor {
+	width: 30px;
+	mix-blend-mode: screen;
+	position: absolute;
+	top: -4px;
+	right: 10px;
+}
+img#addItemCursor {
+	width: 30px;
+	mix-blend-mode: screen;
+	position: absolute;
+	top: -4px;
+	right: 10px;
+}
+
+
+
+/*************************** /
+//     icon menu
+*****************************/
+#menu {
+	list-style: none;
+	position: absolute;
+	margin-top: 10px;
+	left: 420px;
+	z-index: 1;
+}
+#switch {
+	width: 100px;
+	height: 100px;
+	opacity: 0.6;
+	cursor: pointer;
+	-webkit-filter: brightness(100%);
+	-webkit-filter: hue-rotate(0deg);
+  	filter: hue-rotate(0deg);
+}
+
+/*************************** /
+//     bar chart
+*****************************/
+div#barChartContainer {
+	position: absolute;
+	bottom: 1px;
+	width: 60%;
+	max-width: 1000px;
+	height:18%;
+	min-height: 80px;
+	margin-left: 9px;
+	margin-bottom: 2px;
+	box-shadow: 0px 0px 12px rgba(255,255,255,0.75);
+	border: 1px solid rgba(127,255,255,0.75);
+	background-color: rgba(127, 127, 127, 0.25);
+}
+canvas.barChart {
+	position: absolute;
+	bottom: 0px;
+}
+
+p#inputLabel {
+	padding-left: 10px;
+	padding-bottom: 12%;
+	font-size: 13px;
+	font-weight: bolder;
+}
+
+/*************************** /
+//      neural network
+*****************************/
+div#neuralNetworkContainer {
+	position: absolute;
+	bottom: 1px;
+	right: 1px;
+	width: 33%;
+	height:58%;
+	box-shadow: 0px 0px 12px rgba(255,255,255,0.75);
+	border: 1px solid rgba(127,255,255,0.75);
+	background-color: rgba(127, 127, 127, 0.25);
+}
+.neuralNetworkText {	
+	color: rgba(255,255,0,0.7);
+	text-shadow: 0 0 10px rgba(240,200,200,1);	
+	width: 200px;
+	margin: auto;
+	display: block;
+	font-size: 20
+	px;
+}
+
+
+/*************************** /
+//     donuts chart
+*****************************/
+canvas.donutsChart {
+	position: absolute;
+	left: 50px;
+	bottom: 10px;
+	opacity: 0.5;
+}
+
+
+/*************************** /
+//     robot view
+*****************************/
+#robotView {
+	width: 0;
+	height: 0;
+	position: absolute;
+	background-color: rgba(255, 255, 255, 0);
+	border-color: rgba(0, 255, 255, 0.6);
+	box-shadow: 0px 0px 12px rgba(0,255,255,0.75);
+	margin: -4px;
+	border-width: 3px;
+	border-style: solid;
+	right: 0;
+	top: 0;
+}
